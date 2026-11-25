@@ -1,6 +1,3 @@
-// Cloudflare Pages Function: /api/ai (使用 Cloudflare 內建 Workers AI，免 API Key、香港直連)
-// 部署後請在 Cloudflare Pages -> Settings -> Bindings 新增 Workers AI，Variable name 填：AI
-
 export async function onRequestOptions() {
   return new Response(null, {
     status: 204,
@@ -13,8 +10,6 @@ export async function onRequestOptions() {
 }
 
 function extractJSON(text) {
-  if (!text) throw new Error("Empty AI response");
-  function extractJSON(text) {
   if (!text) throw new Error("Empty AI response");
   if (typeof text === "object") {
     if (text.response && typeof text.response === "object") return text.response;
@@ -29,6 +24,7 @@ function extractJSON(text) {
   }
   return JSON.parse(cleaned);
 }
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   const corsHeaders = {
@@ -171,3 +167,4 @@ Use concise Hong Kong Traditional Chinese (繁體中文).`;
     );
   }
 }
+```[cite: 3]
