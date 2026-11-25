@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Catchy" />
+  <meta name="theme-color" content="#F8FAFC" />
+  <title>Catchy — 課堂翻譯生字簿</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#EFF6FF',
+              100: '#DBEAFE',
+              500: '#3B82F6',
+              600: '#2563EB',
+              700: '#1D4ED8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang HK", "Noto Sans TC", sans-serif;
+      overscroll-behavior-y: none;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite linear;
+    }
+    .dark .skeleton {
+      background: linear-gradient(90deg, #1E293B 25%, #334155 50%, #1E293B 75%);
+      background-size: 200% 100%;
+    }
+
+    .swipe-item-inner {
+      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+      touch-action: pan-y;
+    }
+    .article-word {
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 0 2px;
+      transition: background-color 0.15s;
+    }
+    .article-word:hover {
+      background-color: rgba(37, 99, 235, 0.12);
+    }
+    .article-word-target {
+      background-color: #DBEAFE;
+      color: #1D4ED8;
+      font-weight: 600;
+      padding: 1px 4px;
+      border-radius: 5px;
+    }
+    .dark .article-word-target {
+      background-color: rgba(59, 130, 246, 0.25);
+      color: #93C5FD;
+    }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] text-[#0F172A] dark:bg-[#0F172A] dark:text-slate-100 min-h-screen transition-colors duration-200">
+  <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col relative pb-24">
+    <!-- Top Header -->
+    <header class="sticky top-0 z-30 bg-[#F8FAFC]/90 dark:bg-[#0F172A]/90 backdrop-blur-md border-b border-[#E2E8F0] dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-brand-600 text-white font-bold flex items-center justify-center shadow-sm text-base">C</div>
+        <div>
+          <span class="font-bold text-lg tracking-tight">Catchy</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btn-pro" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
+          PRO
+        </button>
+        <button id="btn-accent" class="px-2.5 py-1 rounded-full text-xs font-medium bg-white dark:bg-slate-800 border border-[#E2E8F0] dark:border-slate-700 text-slate-600 dark:text-slate-300" title="切換美式/英式發音">
+          US
+        </button>
+        <button id="btn-theme" class="w-8 h-8 rounded-full bg-white dark:bg-slate-800 border border-[#E2E8F0] dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300" title="切換淺色/深色模式">
+          <span id="theme-icon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main View Container -->
+    <main id="main-content" class="flex-1 px-4 pt-4"></main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-md border-t border-[#E2E8F0] dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
+      <div class="max-w-md mx-auto grid grid-cols-4 px-2 py-2">
+        <button data-tab="translate" class="nav-btn flex flex-col items-center gap-1 py-1 rounded-xl text-brand-600 dark:text-brand-500">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+          <span class="text-[11px] font-medium">翻譯</span>
+        </button>
+        <button data-tab="wordbooks" class="nav-btn flex flex-col items-center gap-1 py-1 rounded-xl text-slate-500 dark:text-slate-400">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          <span class="text-[11px] font-medium">單詞簿</span>
+        </button>
+        <button data-tab="review" class="nav-btn flex flex-col items-center gap-1 py-1 rounded-xl text-slate-500 dark:text-slate-400">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span class="text-[11px] font-medium">重溫</span>
+        </button>
+        <button data-tab="article" class="nav-btn flex flex-col items-center gap-1 py-1 rounded-xl text-slate-500 dark:text-slate-400">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+          <span class="text-[11px] font-medium">每日文章</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Bottom Sheet / Modal Container -->
+  <div id="modal-root" class="fixed inset-0 z-50 hidden">
+    <div id="modal-backdrop" class="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]"></div>
+    <div id="modal-sheet" class="absolute bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-[#1E293B] rounded-t-3xl p-5 pb-8 shadow-2xl border-t border-[#E2E8F0] dark:border-slate-700 max-h-[85vh] overflow-y-auto"></div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 hidden px-4 py-2 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-medium shadow-lg"></div>
+
+  <script>
+    // ==================== STATE & STORAGE ====================
+    const STORAGE_KEYS = {
+      WORDBOOKS: 'catchy_wordbooks_v1',
+      WORDS: 'catchy_words_v1',
+      HISTORY: 'catchy_history_v1',
+      CACHE: 'catchy_cache_v1',
+      PREFS: 'catchy_prefs_v1',
+      ARTICLE: 'catchy_article_v1'
+    };
+
+    const BOOK_COLORS = [
+      { id: 'blue', bg: 'bg-blue-100 dark:bg-blue-500/20', text: 'text-blue-700 dark:text-blue-300', dot: 'bg-blue-500' },
+      { id: 'emerald', bg: 'bg-emerald-100 dark:bg-emerald-500/20', text: 'text-emerald-700 dark:text-emerald-300', dot: 'bg-emerald-500' },
+      { id: 'violet', bg: 'bg-violet-100 dark:bg-violet-500/20', text: 'text-violet-700 dark:text-violet-300', dot: 'bg-violet-500' },
+      { id: 'amber', bg: 'bg-amber-100 dark:bg-amber-500/20', text: 'text-amber-700 dark:text-amber-300', dot: 'bg-amber-500' },
+      { id: 'rose', bg: 'bg-rose-100 dark:bg-rose-500/20', text: 'text-rose-700 dark:text-rose-300', dot: 'bg-rose-500' }
+    ];
+
+    const LEVELS = [
+      '基礎打底（目標衝 Lv 3）',
+      'DSE Lv 3–4',
+      'DSE Lv 5–5**',
+      'IELTS 6.0–6.5',
+      'IELTS 7.0+',
+      '輕鬆日常'
+    ];
+
+    const STYLES = [
+      { id: '搭車小故事', desc: '~150字 輕鬆故事' },
+      { id: '新聞／評論', desc: '~220字 報章語氣' },
+      { id: '實戰小測驗', desc: '短文 + 2題 MC' }
+    ];
+
+    const DEFAULT_WORDBOOKS = [
+      { id: 'wb_class', name: '課堂生字', color: 'blue' },
+      { id: 'wb_reading', name: '高頻閱讀詞', color: 'emerald' }
+    ];
+
+    const DEFAULT_WORDS = [
+      {
+        id: 'w1', bookId: 'wb_class', word: 'demonstrate', ipa: '/ˈdem.ən.streɪt/', pos: 'v.',
+        meaning: '示範；證明；展示',
+        exampleEn: 'The professor used a simple experiment to demonstrate the theory.',
+        exampleZh: '教授用一個簡單的實驗來示範這個理論。',
+        mastery: 'learning', nextReview: Date.now(), createdAt: Date.now() - 86400000 * 2
+      },
+      {
+        id: 'w2', bookId: 'wb_class', word: 'resilient', ipa: '/rɪˈzɪl.jənt/', pos: 'adj.',
+        meaning: '有韌性的；適應力強的',
+        exampleEn: 'Small businesses need to be resilient during economic downturns.',
+        exampleZh: '小型企業在經濟低迷時期需要具備強大韌性。',
+        mastery: 'new', nextReview: Date.now(), createdAt: Date.now() - 86400000
+      },
+      {
+        id: 'w3', bookId: 'wb_class', word: 'inevitable', ipa: '/ɪnˈev.ɪ.tə.bəl/', pos: 'adj.',
+        meaning: '不可避免的；必然發生的',
+        exampleEn: 'With rapid AI growth, changes in the job market are inevitable.',
+        exampleZh: '隨著 AI 迅速發展，就業市場的轉變是不可避免的。',
+        mastery: 'new', nextReview: Date.now(), createdAt: Date.now() - 72000000
+      },
+      {
+        id: 'w4', bookId: 'wb_reading', word: 'perspective', ipa: '/pəˈspek.tɪv/', pos: 'n.',
+        meaning: '觀點；角度；看法',
+        exampleEn: 'Studying abroad gave her a fresh perspective on local culture.',
+        exampleZh: '出國留學讓她對本地文化有了全新的角度。',
+        mastery: 'learning', nextReview: Date.now(), createdAt: Date.now() - 50000000
+      },
+      {
+        id: 'w5', bookId: 'wb_reading', word: 'sustainable', ipa: '/səˈsteɪ.nə.bəl/', pos: 'adj.',
+        meaning: '可持續的；環保的',
+        exampleEn: 'Universities are promoting more sustainable campus lifestyles.',
+        exampleZh: '大學正推廣更具可持續性的校園生活方式。',
+        mastery: 'mastered', nextReview: Date.now() + 86400000 * 3, createdAt: Date.now() - 40000000
+      },
+      {
+        id: 'w6', bookId: 'wb_reading', word: 'allocate', ipa: '/ˈæl.ə.keɪt/', pos: 'v.',
+        meaning: '分配；撥出（資源或時間）',
+        exampleEn: 'Remember to allocate enough time for revision before finals.',
+        exampleZh: '記得在期末考前分配足夠時間溫習。',
+        mastery: 'new', nextReview: Date.now(), createdAt: Date.now() - 20000000
+      }
+    ];
+
+    function loadJSON(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch { return fallback; }
+    }
+    function saveJSON(key, val) {
+      try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+    }
+
+    const state = {
+      tab: 'translate',
+      translateView: 'input', // 'input' | 'result'
+      inputText: '',
+      loadingTranslate: false,
+      translateResult: null,
+      translateError: null,
+      wordbooks: loadJSON(STORAGE_KEYS.WORDBOOKS, DEFAULT_WORDBOOKS),
+      words: loadJSON(STORAGE_KEYS.WORDS, DEFAULT_WORDS),
+      history: loadJSON(STORAGE_KEYS.HISTORY, []),
+      cache: loadJSON(STORAGE_KEYS.CACHE, {}),
+      prefs: loadJSON(STORAGE_KEYS.PREFS, {
+        dark: false,
+        accent: 'US',
+        level: 'DSE Lv 3–4',
+        style: '搭車小故事',
+        articleBookId: 'all'
+      }),
+      activeBookId: 'all',
+      searchQuery: '',
+      expandedWordId: null,
+      // Review state
+      reviewBookId: 'all',
+      reviewMode: 'flashcard', // 'flashcard' | 'spelling'
+      reviewQueue: [],
+      reviewIndex: 0,
+      flashcardRevealed: false,
+      spellingInput: '',
+      spellingHintCount: 0,
+      spellingResult: null, // null | { correct, expected, actual }
+      // Article state
+      articleLoading: false,
+      articleData: loadJSON(STORAGE_KEYS.ARTICLE, null),
+      articleShowZh: false,
+      quizAnswers: {}
+    };
+
+    // ==================== UTILITIES ====================
+    function escapeHtml(str = '') {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => el.classList.add('hidden'), 2000);
+    }
+
+    function speak(text) {
+      if (!('speechSynthesis' in window) || !text) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = state.prefs.accent === 'UK' ? 'en-GB' : 'en-US';
+      utter.rate = 0.95;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function getBookColor(colorId) {
+      return BOOK_COLORS.find(c => c.id === colorId) || BOOK_COLORS[0];
+    }
+
+    function isWordSaved(wordStr) {
+      const norm = (wordStr || '').trim().toLowerCase();
+      return state.words.find(w => w.word.toLowerCase() === norm);
+    }
+
+    function applyTheme() {
+      const html = document.documentElement;
+      if (state.prefs.dark) {
+        html.classList.add('dark');
+        document.getElementById('theme-icon').textContent = '☀️';
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0F172A');
+      } else {
+        html.classList.remove('dark');
+        document.getElementById('theme-icon').textContent = '🌙';
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#F8FAFC');
+      }
+      document.getElementById('btn-accent').textContent = state.prefs.accent;
+    }
+
+    function openModal(html) {
+      const root = document.getElementById('modal-root');
+      document.getElementById('modal-sheet').innerHTML = html;
+      root.classList.remove('hidden');
+    }
+    function closeModal() {
+      document.getElementById('modal-root').classList.add('hidden');
+    }
+    document.getElementById('modal-backdrop').addEventListener('click', closeModal);
+
+    // ==================== API HELPER ====================
+    async function callAPI(action, payload, retries = 1) {
+      for (let i = 0; i <= retries; i++) {
+        try {
+          const res = await fetch('/api/ai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, payload })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.message || data.error || `HTTP ${res.status}`);
+          }
+          return data;
+        } catch (err) {
+          console.error('[Catchy API Error]', action, err);
+          if (i === retries) throw err;
+        }
+      }
+    }
+
+    // ==================== TRANSLATE LOGIC ====================
+    async function doTranslate(rawInput) {
+      const text = (rawInput ?? state.inputText).trim();
+      if (!text) return;
+      state.inputText = text;
+      state.translateView = 'result';
+      state.translateError = null;
+
+      const cacheKey = 'tr_' + text.toLowerCase();
+      if (state.cache[cacheKey]) {
+        state.translateResult = state.cache[cacheKey];
+        state.loadingTranslate = false;
+        addToHistory(text, state.translateResult);
+        render();
+        return;
+      }
+
+      state.loadingTranslate = true;
+      state.translateResult = null;
+      render();
+
+      try {
+        const res = await callAPI('translate', { text }, 1);
+        state.translateResult = res;
+        state.loadingTranslate = false;
+        if (!res.isTypo) {
+          state.cache[cacheKey] = res;
+          saveJSON(STORAGE_KEYS.CACHE, state.cache);
+          addToHistory(text, res);
+        }
+      } catch (err) {
+        state.loadingTranslate = false;
+        state.translateError = err.message || '連線失敗，請稍後再試';
+      }
+      render();
+    }
+
+    function addToHistory(text, res) {
+      if (!res || res.isTypo) return;
+      const item = {
+        id: 'h_' + Date.now(),
+        text,
+        meaning: res.meaning || '',
+        time: Date.now()
+      };
+      state.history = [item, ...state.history.filter(h => h.text.toLowerCase() !== text.toLowerCase())].slice(0, 30);
+      saveJSON(STORAGE_KEYS.HISTORY, state.history);
+    }
+
+    function deleteHistoryItem(id) {
+      state.history = state.history.filter(h => h.id !== id);
+      saveJSON(STORAGE_KEYS.HISTORY, state.history);
+      render();
+    }
+
+    function clearAllHistory() {
+      state.history = [];
+      saveJSON(STORAGE_KEYS.HISTORY, state.history);
+      showToast('已清除全部翻譯紀錄');
+      render();
+    }
+
+    // ==================== SAVE WORD MODAL ====================
+    function openSaveWordModal(wordObj) {
+      const existing = isWordSaved(wordObj.word);
+      const booksHtml = state.wordbooks.map(b => {
+        const c = getBookColor(b.color);
+        const count = state.words.filter(w => w.bookId === b.id).length;
+        return `
+          <button onclick="saveWordToBook('${b.id}')" class="w-full flex items-center justify-between p-3.5 rounded-2xl border border-[#E2E8F0] dark:border-slate-700 hover:border-brand-500 bg-slate-50/70 dark:bg-slate-800/60 transition">
+            <div class="flex items-center gap-3">
+              <span class="w-3 h-3 rounded-full ${c.dot}"></span>
+              <span class="font-medium text-sm">${escapeHtml(b.name)}</span>
+            </div>
+            <span class="text-xs text-slate-400">${count} 字</span>
+          </button>
+        `;
+      }).join('');
+
+      window._pendingSaveWord = wordObj;
+      openModal(`
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="font-bold text-base">${existing ? '更新單詞簿位置' : '加入單詞簿'}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${escapeHtml(wordObj.word)} · ${escapeHtml(wordObj.meaning)}</p>
+          </div>
+          <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center">✕</button>
+        </div>
+        <div class="space-y-2.5 mb-4">${booksHtml}</div>
+        <div class="pt-3 border-t border-[#E2E8F0] dark:border-slate-700">
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">或者即時新建單詞簿：</p>
+          <div class="flex gap-2">
+            <input id="quick-new-book" type="text" placeholder="例如：Marketing Ch.3" class="flex-1 px-3 py-2 text-sm rounded-xl border border-[#E2E8F0] dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:border-brand-600" />
+            <button onclick="quickCreateAndSave()" class="px-4 py-2 rounded-xl bg-brand-600 text-white text-sm font-medium">建立並加入</button>
+          </div>
+        </div>
+      `);
+    }
+
+    window.saveWordToBook = function(bookId) {
+      const w = window._pendingSaveWord;
+      if (!w) return;
+      const existingIdx = state.words.findIndex(item => item.word.toLowerCase() === w.word.toLowerCase());
+      if (existingIdx >= 0) {
+        state.words[existingIdx] = { ...state.words[existingIdx], bookId };
+        showToast('已更新單詞簿');
+      } else {
+        state.words.unshift({
+          id: 'w_' + Date.now() + Math.random().toString(36).slice(2, 5),
+          bookId,
+          word: w.word,
+          ipa: w.ipa || '',
+          pos: w.pos || '',
+          meaning: w.meaning || '',
+          exampleEn: w.exampleEn || '',
+          exampleZh: w.exampleZh || '',
+          mastery: 'new',
+          nextReview: Date.now(),
+          createdAt: Date.now()
+        });
+        showToast(`已加入「${state.wordbooks.find(b => b.id === bookId)?.name || ''}」`);
+      }
+      saveJSON(STORAGE_KEYS.WORDS, state.words);
+      closeModal();
+      render();
+    };
+
+    window.quickCreateAndSave = function() {
+      const name = document.getElementById('quick-new-book')?.value.trim();
+      if (!name) return;
+      const color = BOOK_COLORS[state.wordbooks.length % BOOK_COLORS.length].id;
+      const newBook = { id: 'wb_' + Date.now(), name, color };
+      state.wordbooks.push(newBook);
+      saveJSON(STORAGE_KEYS.WORDBOOKS, state.wordbooks);
+      window.saveWordToBook(newBook.id);
+    };
+
+    // ==================== WORDBOOK MANAGEMENT ====================
+    window.openCreateBookModal = function(editBookId = null) {
+      const book = editBookId ? state.wordbooks.find(b => b.id === editBookId) : null;
+      let selectedColor = book ? book.color : BOOK_COLORS[0].id;
+      window._modalBookColor = selectedColor;
+
+      const colorsHtml = BOOK_COLORS.map(c => `
+        <button type="button" onclick="selectBookColor('${c.id}')" data-color="${c.id}" class="color-dot-btn w-8 h-8 rounded-full ${c.dot} ${c.id === selectedColor ? 'ring-2 ring-offset-2 ring-slate-900 dark:ring-white' : ''}"></button>
+      `).join('');
+
+      openModal(`
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold text-base">${book ? '編輯單詞簿' : '新增單詞簿'}</h3>
+          <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">✕</button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1.5">單詞簿名稱</label>
+            <input id="book-name-input" type="text" value="${escapeHtml(book?.name || '')}" placeholder="例如：DSE 必背 / Psychology" class="w-full px-3.5 py-2.5 rounded-xl border border-[#E2E8F0] dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:border-brand-600" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-2">標籤顏色</label>
+            <div class="flex gap-3">${colorsHtml}</div>
+          </div>
+          <div class="flex gap-2 pt-2">
+            ${book && state.wordbooks.length > 1 ? `<button onclick="deleteBook('${book.id}')" class="px-4 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 text-sm font-medium">刪除</button>` : ''}
+            <button onclick="submitBookModal('${editBookId || ''}')" class="flex-1 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold">儲存</button>
+          </div>
+        </div>
+      `);
+    };
+
+    window.selectBookColor = function(colorId) {
+      window._modalBookColor = colorId;
+      document.querySelectorAll('.color-dot-btn').forEach(btn => {
+        if (btn.dataset.color === colorId) {
+          btn.classList.add('ring-2', 'ring-offset-2', 'ring-slate-900', 'dark:ring-white');
+        } else {
+          btn.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-900', 'dark:ring-white');
+        }
+      });
+    };
+
+    window.submitBookModal = function(editBookId) {
+      const name = document.getElementById('book-name-input')?.value.trim();
+      if (!name) return;
+      if (editBookId) {
+        const idx = state.wordbooks.findIndex(b => b.id === editBookId);
+        if (idx >= 0) {
+          state.wordbooks[idx].name = name;
+          state.wordbooks[idx].color = window._modalBookColor || 'blue';
+        }
+        showToast('已更新單詞簿');
+      } else {
+        state.wordbooks.push({ id: 'wb_' + Date.now(), name, color: window._modalBookColor || 'blue' });
+        showToast('已新增單詞簿');
+      }
+      saveJSON(STORAGE_KEYS.WORDBOOKS, state.wordbooks);
+      closeModal();
+      render();
+    };
+
+    window.deleteBook = function(bookId) {
+      if (state.wordbooks.length <= 1) return;
+      const fallbackId = state.wordbooks.find(b => b.id !== bookId).id;
+      state.words.forEach(w => { if (w.bookId === bookId) w.bookId = fallbackId; });
+      state.wordbooks = state.wordbooks.filter(b => b.id !== bookId);
+      if (state.activeBookId === bookId) state.activeBookId = 'all';
+      saveJSON(STORAGE_KEYS.WORDBOOKS, state.wordbooks);
+      saveJSON(STORAGE_KEYS.WORDS, state.words);
+      showToast('已刪除單詞簿（生字已移至其他簿）');
+      closeModal();
+      render();
+    };
+
+    window.deleteWord = function(wordId) {
+      state.words = state.words.filter(w => w.id !== wordId);
+      saveJSON(STORAGE_KEYS.WORDS, state.words);
+      showToast('已刪除生字');
+      render();
+    };
+
+    window.startSpellingForWord = function(wordId) {
+      const w = state.words.find(item => item.id === wordId);
+      if (!w) return;
+      state.tab = 'review';
+      state.reviewMode = 'spelling';
+      state.reviewQueue = [w];
+      state.reviewIndex = 0;
+      state.spellingInput = '';
+      state.spellingHintCount = 0;
+      state.spellingResult = null;
+      updateNavUI();
+      render();
+    };
+
+    // ==================== REVIEW LOGIC ====================
+    function buildReviewQueue() {
+      let pool = state.reviewBookId === 'all'
+        ? [...state.words]
+        : state.words.filter(w => w.bookId === state.reviewBookId);
+      // Prioritize due words first
+      pool.sort((a, b) => (a.nextReview || 0) - (b.nextReview || 0));
+      state.reviewQueue = pool;
+      state.reviewIndex = 0;
+      state.flashcardRevealed = false;
+      state.spellingInput = '';
+      state.spellingHintCount = 0;
+      state.spellingResult = null;
+    }
+
+    window.rateFlashcard = function(days) {
+      const current = state.reviewQueue[state.reviewIndex];
+      if (!current) return;
+      const idx = state.words.findIndex(w => w.id === current.id);
+      if (idx >= 0) {
+        state.words[idx].nextReview = Date.now() + days * 86400000;
+        state.words[idx].mastery = days === 0 ? 'new' : days === 3 ? 'learning' : 'mastered';
+        saveJSON(STORAGE_KEYS.WORDS, state.words);
+      }
+      state.flashcardRevealed = false;
+      state.reviewIndex++;
+      render();
+    };
+
+    window.checkSpelling = function() {
+      const current = state.reviewQueue[state.reviewIndex];
+      if (!current) return;
+      const inputEl = document.getElementById('spelling-input');
+      const actual = (inputEl ? inputEl.value : state.spellingInput).trim();
+      if (!actual) return;
+      const expected = current.word.trim();
+      const correct = actual.toLowerCase() === expected.toLowerCase();
+      state.spellingInput = actual;
+      state.spellingResult = { correct, expected, actual };
+      if (correct) {
+        const idx = state.words.findIndex(w => w.id === current.id);
+        if (idx >= 0) {
+          state.words[idx].mastery = 'mastered';
+          state.words[idx].nextReview = Date.now() + 3 * 86400000;
+          saveJSON(STORAGE_KEYS.WORDS, state.words);
+        }
+      }
+      render();
+    };
+
+    window.nextSpelling = function() {
+      state.reviewIndex++;
+      state.spellingInput = '';
+      state.spellingHintCount = 0;
+      state.spellingResult = null;
+      render();
+    };
+
+    window.giveSpellingHint = function() {
+      const current = state.reviewQueue[state.reviewIndex];
+      if (!current) return;
+      state.spellingHintCount = Math.min(current.word.length, state.spellingHintCount + 1);
+      state.spellingInput = current.word.slice(0, state.spellingHintCount);
+      render();
+      setTimeout(() => {
+        const el = document.getElementById('spelling-input');
+        if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+      }, 20);
+    };
+
+    // ==================== DAILY ARTICLE LOGIC ====================
+    window.generateArticle = async function() {
+      const pool = state.prefs.articleBookId === 'all'
+        ? state.words
+        : state.words.filter(w => w.bookId === state.prefs.articleBookId);
+      const selectedWords = pool.slice(0, 8).map(w => ({ word: w.word, meaning: w.meaning }));
+
+      state.articleLoading = true;
+      state.articleShowZh = false;
+      state.quizAnswers = {};
+      render();
+
+      try {
+        const data = await callAPI('article', {
+          words: selectedWords,
+          level: state.prefs.level,
+          style: state.prefs.style
+        }, 1);
+        state.articleData = {
+          ...data,
+          level: state.prefs.level,
+          style: state.prefs.style,
+          generatedAt: Date.now()
+        };
+        saveJSON(STORAGE_KEYS.ARTICLE, state.articleData);
+      } catch (err) {
+        showToast('生成文章失敗：' + (err.message || '請重試'));
+      }
+      state.articleLoading = false;
+      render();
+    };
+
+    window.clickArticleWord = async function(cleanWord, rawSentence) {
+      if (!cleanWord) return;
+      const saved = isWordSaved(cleanWord);
+      if (saved) {
+        openModal(`
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-xl font-bold">${escapeHtml(saved.word)}</h3>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">已在單詞簿中</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-1">${escapeHtml(saved.ipa)} · ${escapeHtml(saved.pos)}</p>
+            </div>
+            <button onclick="speak('${escapeHtml(saved.word).replace(/'/g, "\\'")}')" class="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center">🔊</button>
+          </div>
+          <p class="text-base font-medium mb-3">${escapeHtml(saved.meaning)}</p>
+          ${saved.exampleEn ? `<div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-xs text-slate-600 dark:text-slate-300"><p class="font-medium">${escapeHtml(saved.exampleEn)}</p><p class="text-slate-500 mt-1">${escapeHtml(saved.exampleZh)}</p></div>` : ''}
+        `);
+        return;
+      }
+
+      // Check local context cache
+      const cKey = 'ctx_' + cleanWord.toLowerCase();
+      if (state.cache[cKey]) {
+        showContextWordModal(state.cache[cKey], rawSentence);
+        return;
+      }
+
+      // Show clean skeleton loading modal (no "AI 查緊" text)
+      openModal(`
+        <div class="space-y-3 py-2">
+          <div class="flex items-center justify-between">
+            <div class="h-6 w-32 rounded-lg skeleton"></div>
+            <div class="h-9 w-9 rounded-full skeleton"></div>
+          </div>
+          <div class="h-4 w-24 rounded-md skeleton"></div>
+          <div class="h-5 w-48 rounded-md skeleton"></div>
+          <div class="h-11 w-full rounded-xl skeleton mt-3"></div>
+        </div>
+      `);
+
+      try {
+        const res = await callAPI('lookup_in_context', { word: cleanWord, sentence: rawSentence }, 1);
+        state.cache[cKey] = res;
+        saveJSON(STORAGE_KEYS.CACHE, state.cache);
+        showContextWordModal(res, rawSentence);
+      } catch (err) {
+        openModal(`
+          <div class="text-center py-4">
+            <p class="text-sm text-slate-500 mb-3">暫時查唔到「${escapeHtml(cleanWord)}」，請再試一次。</p>
+            <button onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm">關閉</button>
+          </div>
+        `);
+      }
+    };
+
+    function showContextWordModal(res, rawSentence) {
+      const displayWord = res.baseForm || res.word;
+      const wordPayload = {
+        word: displayWord,
+        ipa: res.ipa || '',
+        pos: res.pos || '',
+        meaning: res.meaning || res.contextMeaning || '',
+        exampleEn: rawSentence || '',
+        exampleZh: ''
+      };
+      window._ctxWordPayload = wordPayload;
+      openModal(`
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <h3 class="text-xl font-bold">${escapeHtml(displayWord)}</h3>
+            <p class="text-xs text-slate-500 mt-0.5">${escapeHtml(res.ipa || '')} · ${escapeHtml(res.pos || '')}</p>
+          </div>
+          <button onclick="speak('${escapeHtml(displayWord).replace(/'/g, "\\'")}')" class="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center">🔊</button>
+        </div>
+        <p class="text-base font-semibold mb-1">${escapeHtml(res.contextMeaning || res.meaning)}</p>
+        ${res.meaning && res.meaning !== res.contextMeaning ? `<p class="text-xs text-slate-500 mb-4">一般解釋：${escapeHtml(res.meaning)}</p>` : '<div class="mb-4"></div>'}
+        <button onclick="openSaveWordModal(window._ctxWordPayload)" class="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-sm">
+          ＋ 加入單詞簿
+        </button>
+      `);
+    }
+
+    // ==================== RENDER FUNCTIONS ====================
+    function renderTranslate() {
+      if (state.translateView === 'result') {
+        return renderTranslateResult();
+      }
+
+      const historyHtml = state.history.length === 0
+        ? `<div class="text-center py-8 text-xs text-slate-400">未有翻譯紀錄，試下輸入英文單字或課堂句子</div>`
+        : state.history.map(h => `
+          <div class="swipe-wrapper relative overflow-hidden rounded-2xl mb-2 bg-rose-500" data-hid="${h.id}">
+            <button onclick="deleteHistoryItem('${h.id}')" class="absolute right-0 top-0 bottom-0 w-20 flex items-center justify-center text-white text-xs font-semibold">刪除</button>
+            <div class="swipe-item-inner group relative bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-slate-800 rounded-2xl p-3.5 flex items-center justify-between cursor-pointer" data-text="${escapeHtml(h.text)}">
+              <div class="min-w-0 pr-3 flex-1">
+                <p class="font-semibold text-sm truncate">${escapeHtml(h.text)}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">${escapeHtml(h.meaning)}</p>
+              </div>
+              <button onclick="event.stopPropagation(); deleteHistoryItem('${h.id}')" class="opacity-0 group-hover:opacity-100 transition w-7 h-7 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 flex items-center justify-center text-sm" title="刪除紀錄">✕</button>
+            </div>
+          </div>
+        `).join('');
+
+      return `
+        <div class="space-y-4">
+          <div class="bg-white dark:bg-[#1E293B] rounded-3xl border border-[#E2E8F0] dark:border-slate-800 shadow-sm p-4">
+            <textarea id="translate-input" rows="4" maxlength="500" placeholder="輸入英文單字或課堂句子..." class="w-full bg-transparent resize-none text-base placeholder-slate-400 focus:outline-none">${escapeHtml(state.inputText)}</textarea>
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div class="flex items-center gap-2">
+                <span id="char-count" class="text-xs text-slate-400">${state.inputText.length}/500</span>
+                ${state.inputText ? `<button id="btn-clear-input" class="text-xs text-slate-400 hover:text-slate-600 px-2 py-1">清除</button>` : ''}
+              </div>
+              <button id="btn-do-translate" class="px-5 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow-sm transition active:scale-95">
+                翻譯 →
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Try Chips -->
+          <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+            <span class="text-xs text-slate-400 shrink-0">試下：</span>
+            <button onclick="doTranslate('demonstrate')" class="shrink-0 px-3 py-1.5 rounded-full text-xs bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-slate-700 text-slate-600 dark:text-slate-300">demonstrate</button>
+            <button onclick="doTranslate('accomodate')" class="shrink-0 px-3 py-1.5 rounded-full text-xs bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300">錯字: accomodate</button>
+            <button onclick="doTranslate('The lecture highlighted how sustainable marketing drives long-term loyalty.')" class="shrink-0 px-3 py-1.5 rounded-full text-xs bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-slate-700 text-slate-600 dark:text-slate-300">課堂長句</button>
+          </div>
+
+          <!-- Recent Translations -->
+          <div class="pt-2">
+            <div class="flex items-center justify-between mb-2.5 px-1">
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">最近翻譯</h2>
+              ${state.history.length ? `<button onclick="clearAllHistory()" class="text-xs text-slate-400 hover:text-rose-500">清除全部</button>` : ''}
+            </div>
+            <div id="history-list">${historyHtml}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTranslateResult() {
+      const backBar = `
+        <button id="btn-back-translate" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 mb-3 px-2 py-1 -ml-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+          ← 返回翻譯
+        </button>
+      `;
+
+      // Skeleton Loader (No "AI 查緊" text)
+      if (state.loadingTranslate) {
+        return `
+          ${backBar}
+          <div class="space-y-3">
+            <div class="bg-white dark:bg-[#1E293B] rounded-3xl border border-[#E2E8F0] dark:border-slate-800 p-5 space-y-3">
+              <div class="h-7 w-44 rounded-lg skeleton"></div>
+              <div class="h-4 w-28 rounded-md skeleton"></div>
+              <div class="h-6 w-3/4 rounded-lg skeleton mt-2"></div>
+            </div>
+            <div class="bg-white dark:bg-[#1E293B] rounded-3xl border border-[#E2E8F0] dark:border-slate-800 p-5 space-y-3">
+              <div class="h-4 w-20 rounded-md skeleton"></div>
+              <div class="h-4 w-full rounded-md skeleton"></div>
+              <div class="h-4 w-5/6 rounded-md skeleton"></div>
+            </div>
+          </div>
+        `;
+      }
+
+      if (state.translateError) {
+        return `
+          ${backBar}
+          <div class="bg-white dark:bg-[#1E293B] rounded-3xl border border-[#E2E8F0] dark:border-slate-800 p-6 text-center space-y-3">
+            <p class="text-sm text-slate-600 dark:text-slate-300">${escapeHtml(state.translateError)}</p>
+            <button onclick="doTranslate(state.inputText)" class="px-5 py-2 rounded-xl bg-brand-600 text-white text-sm font-medium">重試</button>
+          </div>
+        `;
+      }
+
+      const r = state.translateResult;
+      if (!r) return backBar;
+
+      // Typo suggestion UI
+      if (r.isTypo) {
+        const sugHtml = (r.suggestions || []).map(s => `
+          <button onclick="doTranslate('${escapeHtml(s.word).replace(/'/g, "\\'")}')" class="w-full text-left p-3.5 rounded-2xl bg-white dark:bg-slate-900/70 border border-amber-200 dark:border-amber-500/30 hover:border-brand-500 flex items-center justify-between transition">
+            <div>
+              <span class="font-bold text-base text-brand-600 dark:text-brand-400">${escapeHtml(s.word)}</span>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${escapeHtml(s.meaning)}</p>
+            </div>
+            <span class="text-slate-400 text-sm">→</span>
+          </button>
+        `).join('');
+
+        return `
+          ${backBar}
+          <div class="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-3xl p-4 space-y-3">
+            <div>
+              <p class="text-xs font-semibold text-amber-700 dark:text-amber-300">你輸入了：${escapeHtml(state.inputText)}</p>
+              <h2 class="text-base font-bold text-amber-900 dark:text-amber-100 mt-0.5">你係咪想查以下單字？</h2>
+            </div>
+            <div class="space-y-2">${sugHtml}</div>
+          </div>
+        `;
+      }
+
+      const displayWord = r.word || state.inputText;
+      const saved = !r.isSentence && isWordSaved(displayWord);
+      const ipa = state.prefs.accent === 'UK' ? (r.ipaUK || r.ipaUS) : (r.ipaUS || r.ipaUK);
+
+      window._currentWordToSave = {
+        word: displayWord,
+        ipa: ipa || '',
+        pos: r.pos || '',
+        meaning: r.meaning || '',
+        exampleEn: r.examples?.[0]?.en || '',
+        exampleZh: r.examples?.[0]?.zh || ''
+      };
+
+      const examplesHtml = (r.examples || []).map(ex => `
+        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 space-y-1">
+          <div class="flex items-start justify-between gap-2">
+            <p class="text-sm font-medium leading-relaxed">${escapeHtml(ex.en)}</p>
+            <button onclick="speak('${escapeHtml(ex.en).replace(/'/g, "\\'")}')" class="shrink-0 text-slate-400 hover:text-brand-600 text-sm">🔊</button>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400">${escapeHtml(ex.zh)}</p>
+        </div>
+      `).join('');
+
+      const keyWordsHtml = (r.keyWords && r.keyWords.length) ? `
+        <div class="bg-white dark:bg-[#1E293B] rounded-3xl border border-[#E2E8F0] dark:border-slate-800 p-4 space-y-2.5">
+          <h3 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">課堂核心生字（附原句例句）</h3>
+          ${r.keyWords.map((kw, idx) => {
+            const kwSaved = isWordSaved(kw.word);
+            return `
+              <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60">
+                <div class="min-w-0 pr-2">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-sm">${escapeHtml(kw.word)}</span>
+                    <span class="text-xs text-slate-400">${escapeHtml(kw.ipa || '')}</span>
+                  </div>
+                  <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">${escapeHtml(kw.pos || '')} ${escapeHtml(kw.meaning)}</p>
+                </div>
+                <button onclick="saveExtractedKeyword(${idx})" class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold ${kwSaved ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-brand-600 text-white'}">
+                  ${kwSaved ? '已收藏' : '＋ 加入'}
+                </button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      ` : '';
+
+      return `
+        ${backBar}
+        <div class="space-y-3.5">
+          <!-- Main Translation Card -->
+          <div class="bg-brand-50/70 dark:bg-[#1E293B] rounded-3xl border border-brand-100 dark:border-slate-700 p-5 space-y-3">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h1 class="${r.isSentence ? 'text-lg leading-snug' : 'text-2xl'} font-bold tracking-tight">${escapeHtml(displayWord)}</h1>
+                ${ipa || r.pos ? `<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">${escapeHtml(ipa || '')} ${r.pos ? `· ${escapeHtml(r.pos)}` : ''}</p>` : ''}
+              </div>
+              <button onclick="speak('${escapeHtml(displayWord).replace(/'/g, "\\'")}')" class="shrink-0 w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-[#E2E8F0] dark:border-slate-700 flex items-center justify-center shadow-sm">🔊</button>
+            </div>
+            <div class="pt-2 border-t border-brand-100 dark:border-slate-700">
+              <p class="text-lg font-bold text-brand-700 dark:text-brand-400 leading-relaxed">${escapeHtml(r.meaning)}</p>
+            </div>
+            ${!r.isSentence ? `
+              <button onclick="openSaveWordModal(window._currentWordToSave)" class="w-full py-3 rounded-2xl font-semibold text-sm transition shadow-sm ${saved ? 'bg-emerald-600 text-white' : 'bg-brand-600 hover:bg-brand-700 text-white'}">
+                ${saved ? '★ 已收藏到單詞簿（點擊更改）' : '★ 記憶此單字 / 加入單詞簿'}
+              </button>
+            ` : ''}
+          </div>
+
+          ${keyWordsHtml}
+
+          ${examplesHtml ? `
+            <div class="bg-white dark:bg-[#1E293B] rounded-3xl border border-[#E2E8F0] dark:border-slate-800 p-4 space-y-2.5">
+              <h3 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">實用例句</h3>
+              ${examplesHtml}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    window.saveExtractedKeyword = function(idx) {
+      const r = state.translateResult;
+      const kw = r?.keyWords?.[idx];
+      if (!kw) return;
+      openSaveWordModal({
+        word: kw.word,
+        ipa: kw.ipa || '',
+        pos: kw.pos || '',
+        meaning: kw.meaning || '',
+        exampleEn: state.inputText,
+        exampleZh: r.meaning || ''
+      });
+    };
+
+    function renderWordbooks() {
+      const bookChips = [
+        `<button onclick="setActiveBook('all')" class="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${state.activeBookId === 'all' ? 'bg-brand-600 text-white' : 'bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-slate-700 text-slate-600 dark:text-slate-300'}">全部 (${state.words.length})</button>`,
+        ...state.wordbooks.map(b => {
+          const count = state.words.filter(w => w.bookId === b.id).length;
+          const active = state.activeBookId === b.id;
+          return `
+            <div class="shrink-0 inline-flex items-center rounded-full overflow-hidden border ${active ? 'bg-brand-600 border-brand-600 text-white' : 'bg-white dark:bg-[#1E293B] border-[#E2E8F0] dark:border-slate-700 text-slate-600 dark:text-slate-300'}">
+              <button onclick="setActiveBook('${b.id}')" class="pl-3.5 pr-2 py-1.5 text-xs font-semibold">${escapeHtml(b.name)} (${count})</button>
+              <button onclick="openCreateBookModal('${b.id}')" class="pr-2.5 pl-1 py-1.5 text-[11px] opacity-70 hover:opacity-100" title="編輯單詞簿">✎</button>
+            </div>
+          `;
+        }),
+        `<button onclick="openCreateBookModal()" class="shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-dashed border-slate-300 dark:border-slate-600 text-slate-500">＋ 新建簿</button>`
+      ].join('');
+
+      const filtered = state.words.filter(w => {
+        const matchBook = state.activeBookId === 'all' || w.bookId === state.activeBookId;
+        const q = state.searchQuery.trim().toLowerCase();
+        const matchQ = !q || w.word.toLowerCase().includes(q) || (w.meaning || '').toLowerCase().includes(q);
+        return matchBook && matchQ;
+      });
+
+      const listHtml = filtered.length === 0
+        ? `<div class="text-center py-12 text-sm text-slate-400">呢本單詞簿未有生字</div>`
+        : filtered.map(w => {
+          const expanded = state.expandedWordId === w.id;
+          const book = state.wordbooks.find(b => b.id === w.bookId);
+          const c = getBookColor(book?.color);
+          const masteryBadge = w.mastery === 'mastered'
+            ? '<span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">好熟</span>'
+            : w.mastery === 'learning'
+              ? '<span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">學習中</span>'
+              : '<span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">新詞</span>';
+
+          return `
+            <div class="bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E2E8F0] dark:border-slate-800 p-4 shadow-sm">
+              <div onclick="toggleExpandWord('${w.id}')" class="flex items-start justify-between cursor-pointer">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-base">${escapeHtml(w.word)}</span>
+                    ${masteryBadge}
+                  </div>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">${escapeHtml(w.pos || '')} ${escapeHtml(w.meaning)}</p>
+                </div>
+                <button onclick="event.stopPropagation(); speak('${escapeHtml(w.word).replace(/'/g, "\\'")}')" class="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-sm">🔊</button>
+              </div>
+              ${expanded ? `
+                <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                  <div class="flex items-center justify-between text-xs text-slate-400">
+                    <span>${escapeHtml(w.ipa || '')}</span>
+                    ${book ? `<span class="px-2 py-0.5 rounded-md ${c.bg} ${c.text}">${escapeHtml(book.name)}</span>` : ''}
+                  </div>
+                  ${w.exampleEn ? `
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 text-xs space-y-1">
+                      <p class="font-medium text-slate-700 dark:text-slate-200">${escapeHtml(w.exampleEn)}</p>
+                      ${w.exampleZh ? `<p class="text-slate-500 dark:text-slate-400">${escapeHtml(w.exampleZh)}</p>` : ''}
+                    </div>
+                  ` : ''}
+                  <div class="flex items-center gap-2">
+                    <button onclick="startSpellingForWord('${w.id}')" class="flex-1 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold">立即串字練習</button>
+                    <button onclick="openSaveWordModal(state.words.find(x => x.id === '${w.id}'))" class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-medium">移動簿</button>
+                    <button onclick="deleteWord('${w.id}')" class="px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-medium">刪除</button>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+
+      return `
+        <div class="space-y-3.5">
+          <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">${bookChips}</div>
+          <input id="word-search" type="text" value="${escapeHtml(state.searchQuery)}" placeholder="搜尋生字或中文解釋..." class="w-full px-4 py-2.5 rounded-2xl bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-slate-800 text-sm focus:outline-none focus:border-brand-600" />
+          <div class="space-y-2.5">${listHtml}</div>
+        </div>
+      `;
+    }
+
+    window.setActiveBook = function(id) { state.activeBookId = id; render(); };
+    window.toggleExpandWord = function(id) { state.expandedWordId = state.expandedWordId === id ? null : id; render(); };
+
+    function renderReview() {
+      const bookOptions = [
+        `<option value="all" ${state.reviewBookId === 'all' ? 'selected' : ''}>全部單詞簿 (${state.words.length})</option>`,
+        ...state.wordbooks.map(b => `<option value="${b.id}" ${state.reviewBookId === b.id ? 'selected' : ''}>${escapeHtml(b.name)} (${state.words.filter(w => w.bookId === b.id).length})</option>`)
+      ].join('');
+
+      const controls = `
+        <div class="flex items-center gap-2 mb-4">
+          <select id="review-book-select" class="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-slate-700 text-xs font-medium focus:outline-none">${bookOptions}</select>
+          <div class="flex bg-slate-200/70 dark:bg-slate-800 p-1 rounded-xl">
+            <button onclick="setReviewMode('flashcard')" class="px-3 py-1 rounded-lg text-xs font-semibold ${state.reviewMode === 'flashcard' ? 'bg-white dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400' : 'text-slate-500'}">抽認卡</button>
+            <button onclick="setReviewMode('spelling')" class="px-3 py-1 rounded-lg text-xs font-semibold ${state.reviewMode === 'spelling' ? 'bg-white dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400' : 'text-slate-500'}">串字測驗</button>
+          </div>
+        </div>
+      `;
+
+      if (state.reviewQueue.length === 0) {
+        return `${controls}<div class="text-center py-16 text-sm text-slate-400">呢本單詞簿仲未有生字可以重溫</div>`;
+      }
+
+      if (state.reviewIndex >= state.reviewQueue.length) {
+        return `
+          ${controls}
+          <div class="bg-white dark:bg-[#1E293B] rounded-3xl border border-[#E2E8F0] dark:border-slate-800 p-8 text-center space-y-4">
+            <div class="text-4xl">🎉</div>
+            <h2 class="text-lg font-bold">完成今輪重溫！</h2>
+            <p class="text-xs text-slate-500">你已經複習晒 ${state.reviewQueue.length} 個生字，繼續保持！</p>
+            <button onclick="restartReview()" class="px-6 py-2.5 rounded-2xl bg-brand-600 text-white text-sm font-semibold">再溫一次</button>
+          </div>
+        `;
+      }
+
+      const current = state.reviewQueue[state.reviewIndex];
+      const progress = Math.round(((state.reviewIndex) / state.reviewQueue.length) * 100);
+      const progressBar = `
+        <div class="mb-4">
+          <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+            <span>進度 ${state.reviewIndex + 1} / ${state.reviewQueue.length}</span>
+            <span>${progress}%</span>
+          </div>
+          <div class="h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div class="h-full bg-brand-600 transition-all" style="width:${progress}%"></div>
+          </div>
+        </div>
+      `;
+
+      if (state.reviewMode === 'flashcard') {
+        return `
+          ${controls}
+          ${progressBar}
+          <div class="bg-white dark:bg-[#1E293B] rounded-3xl border border-[#E2E8F0] dark:border-slate-800 p-6 shadow-sm min-h-[300px] flex flex-col justify-between">
+            <div class="text-center py-6 space-y-3">
+              <h2 class="text-3xl font-bold tracking-tight">${escapeHtml(current.word)}</h2>
+              <p class="text-xs text-slate-400">${escapeHtml(current.ipa || '')}</p>
+              <button onclick="speak('${escapeHtml(current.word).replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-brand-50 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-medium">🔊 聽發音</button>
+            </div>
+            ${state.flashcardRevealed ? `
+              <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <div class="text-center">
+                  <p class="text-lg font-bold text-brand-700 dark:text-brand-400">${escapeHtml(current.pos || '')} ${escapeHtml(current.meaning)}</p>
+                </div>
+                ${current.exampleEn ? `
+                  <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/70 text-xs space-y-1">
+                    <p class="font-medium">${escapeHtml(current.exampleEn)}</p>
+                    <p class="text-slate-500">${escapeHtml(current.exampleZh || '')}</p>
+                  </div>
+                ` : ''}
+                <div class="grid grid-cols-3 gap-2 pt-2">
+                  <button onclick="rateFlashcard(0)" class="py-2.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-semibold">唔記得<br><span class="text-[10px] opacity-75">今日再溫</span></button>
+                  <button onclick="rateFlashcard(3)" class="py-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs font-semibold">有印象<br><span class="text-[10px] opacity-75">3日後</span></button>
+                  <button onclick="rateFlashcard(7)" class="py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">好熟<br><span class="text-[10px] opacity-75">7日後</span></button>
+                </div>
+              </div>
+            ` : `
+              <button onclick="revealFlashcard()" class="w-full py-3.5 rounded-2xl bg-brand-600 text-white text-sm font-semibold">顯示解釋與例句</button>
+            `}
+          </div>
+        `;
+      }
+
+      // Spelling Quiz Mode
+      const clozeSentence = current.exampleEn
+        ? current.exampleEn.replace(new RegExp(current.word, 'gi'), '________')
+        : '';
+
+      let diffHtml = '';
+      if (state.spellingResult) {
+        const { correct, expected, actual } = state.spellingResult;
+        if (correct) {
+          diffHtml = `<div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-center"><p class="text-sm font-bold text-emerald-700 dark:text-emerald-300">✓ 串啱晒！${escapeHtml(expected)}</p></div>`;
+        } else {
+          const maxLen = Math.max(expected.length, actual.length);
+          let boxes = '';
+          for (let i = 0; i < maxLen; i++) {
+            const expChar = expected[i] || '';
+            const actChar = actual[i] || '';
+            const isMatch = expChar.toLowerCase() === actChar.toLowerCase() && expChar !== '';
+            boxes += `
+              <div class="flex flex-col items-center gap-1">
+                <span class="w-7 h-8 rounded-lg flex items-center justify-center font-mono font-bold text-sm ${isMatch ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300'}">${escapeHtml(actChar || '·')}</span>
+                <span class="text-[11px] font-mono text-slate-500">${escapeHtml(expChar)}</span>
+              </div>
+            `;
+          }
+          diffHtml = `
+            <div class="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 space-y-2">
+              <p class="text-xs font-semibold text-rose-600 dark:text-rose-400">逐字對比（上：你串嘅字｜下：正確串法）</p>
+              <div class="flex flex-wrap gap-1.5">${boxes}</div>
+            </div>
+          `;
+        }
+      }
+
+      return `
+        ${controls}
+        ${progressBar}
+        <div class="bg-white dark:bg-[#1E293B] rounded-3xl border border-[#E2E8F0] dark:border-slate-800 p-5 shadow-sm space-y-4">
+          <div class="flex items-start justify-between">
+            <div>
+              <p class="text-xs text-slate-400 mb-1">請串出以下單字（${current.word.length} 個字母）</p>
+              <h2 class="text-xl font-bold text-brand-700 dark:text-brand-400">${escapeHtml(current.pos || '')} ${escapeHtml(current.meaning)}</h2>
+            </div>
+            <button onclick="speak('${escapeHtml(current.word).replace(/'/g, "\\'")}')" class="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-500/20 text-brand-600 flex items-center justify-center">🔊</button>
+          </div>
+          ${clozeSentence ? `<p class="text-xs text-slate-600 dark:text-slate-300 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 leading-relaxed">${escapeHtml(clozeSentence)}</p>` : ''}
+          <input id="spelling-input" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" value="${escapeHtml(state.spellingInput)}" ${state.spellingResult ? 'disabled' : ''} placeholder="輸入英文串法..." class="w-full px-4 py-3 rounded-2xl border border-[#E2E8F0] dark:border-slate-700 bg-slate-50 dark:bg-slate-900 font-mono text-lg tracking-wide focus:outline-none focus:border-brand-600" />
+          ${diffHtml}
+          <div class="flex gap-2">
+            ${state.spellingResult ? `
+              <button onclick="nextSpelling()" class="w-full py-3 rounded-2xl bg-brand-600 text-white text-sm font-semibold">下一題 →</button>
+            ` : `
+              <button onclick="giveSpellingHint()" class="px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold">提示字母</button>
+              <button onclick="checkSpelling()" class="flex-1 py-3 rounded-2xl bg-brand-600 text-white text-sm font-semibold">核對答案</button>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    window.setReviewMode = function(mode) { state.reviewMode = mode; buildReviewQueue(); render(); };
+    window.restartReview = function() { buildReviewQueue(); render(); };
+    window.revealFlashcard = function() { state.flashcardRevealed = true; render(); };
+
+    function renderArticle() {
+      const levelChips = LEVELS.map(lv => `
+        <button onclick="setArticlePref('level', '${lv}')" class="shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition ${state.prefs.level === lv ? 'bg-brand-600 text-white' : 'bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-slate-700 text-slate-600 dark:text-slate-300'}">${lv}</button>
+      `).join('');
+
+      const styleChips = STYLES.map(st => `
+        <button onclick="setArticlePref('style', '${st.id}')" class="flex-1 py-2 px-2 rounded-2xl text-center border transition ${state.prefs.style === st.id ? 'bg-brand-50 dark:bg-brand-500/20 border-brand-500 text-brand-700 dark:text-brand-300' : 'bg-white dark:bg-[#1E293B] border-[#E2E8F0] dark:border-slate-700 text-slate-600 dark:text-slate-300'}">
+          <div class="text-xs font-semibold">${st.id}</div>
+          <div class="text-[10px] opacity-70 mt-0.5">${st.desc}</div>
+        </button>
+      `).join('');
+
+      const bookOpts = [
+        `<option value="all" ${state.prefs.articleBookId === 'all' ? 'selected' : ''}>使用全部單詞簿生字</option>`,
+        ...state.wordbooks.map(b => `<option value="${b.id}" ${state.prefs.articleBookId === b.id ? 'selected' : ''}>只用「${escapeHtml(b.name)}」生字</option>`)
+      ].join('');
+
+      let bodyHtml = '';
+      if (state.articleLoading) {
+        bodyHtml = `
+          <div class="bg-white dark:bg-[#1E293B] rounded-3xl border border-[#E2E8F0] dark:border-slate-800 p-5 space-y-3">
+            <div class="h-6 w-2/3 rounded-lg skeleton"></div>
+            <div class="h-4 w-full rounded-md skeleton"></div>
+            <div class="h-4 w-full rounded-md skeleton"></div>
+            <div class="h-4 w-5/6 rounded-md skeleton"></div>
+            <div class="h-4 w-full rounded-md skeleton mt-4"></div>
+            <div class="h-4 w-4/5 rounded-md skeleton"></div>
+          </div>
+        `;
+      } else if (state.articleData) {
+        const art = state.articleData;
+        const targetSet = new Set([
+          ...(art.usedWords || []).map(w => w.toLowerCase()),
+          ...state.words.map(w => w.word.toLowerCase())
+        ]);
+
+        const paragraphsHtml = (art.paragraphs || []).map(p => {
+          // Tokenize into words and non-words so EVERY English word is clickable
+          const tokens = p.split(/([A-Za-z]+(?:['-][A-Za-z]+)*)/g);
+          const renderedTokens = tokens.map(tok => {
+            if (/^[A-Za-z]+(?:['-][A-Za-z]+)*$/.test(tok)) {
+              const lower = tok.toLowerCase();
+              const isTarget = targetSet.has(lower) || Array.from(targetSet).some(t => t.length >= 4 && lower.startsWith(t.slice(0, -1)));
+              const safeSentence = p.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+              return `<span onclick="clickArticleWord('${tok.replace(/'/g, "\\'")}', '${safeSentence}')" class="article-word ${isTarget ? 'article-word-target' : ''}">${escapeHtml(tok)}</span>`;
+            }
+            return escapeHtml(tok);
+          }).join('');
+          return `<p class="text-[15px] leading-7 text-slate-800 dark:text-slate-200">${renderedTokens}</p>`;
+        }).join('');
+
+        const quizHtml = (art.quiz && art.quiz.length) ? `
+          <div class="bg-white dark:bg-[#1E293B] rounded-3xl border border-[#E2E8F0] dark:border-slate-800 p-5 space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">閱讀理解小測驗</h3>
+            ${art.quiz.map((q, qi) => {
+              const picked = state.quizAnswers[qi];
+              return `
+                <div class="space-y-2">
+                  <p class="text-sm font-semibold">${qi + 1}. ${escapeHtml(q.question)}</p>
+                  <div class="space-y-1.5">
+                    ${(q.options || []).map((opt, oi) => {
+                      let cls = 'bg-slate-50 dark:bg-slate-800/70 border-[#E2E8F0] dark:border-slate-700';
+                      if (picked !== undefined) {
+                        if (oi === q.answerIndex) cls = 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-500 text-emerald-700 dark:text-emerald-300 font-semibold';
+                        else if (oi === picked) cls = 'bg-rose-50 dark:bg-rose-500/20 border-rose-500 text-rose-700 dark:text-rose-300';
+                      }
+                      return `<button onclick="answerQuiz(${qi}, ${oi})" class="w-full text-left px-3.5 py-2.5 rounded-xl border text-xs transition ${cls}">${String.fromCharCode(65 + oi)}. ${escapeHtml(opt)}</button>`;
+                    }).join('')}
+                  </div>
+                  ${picked !== undefined && q.explanationZh ? `<p class="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl">解析：${escapeHtml(q.explanationZh)}</p>` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : '';
+
+        bodyHtml = `
+          <div class="bg-white dark:bg-[#1E293B] rounded-3xl border border-[#E2E8F0] dark:border-slate-800 p-5 shadow-sm space-y-4">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold bg-brand-50 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 mb-1.5">${escapeHtml(art.level)} · ${escapeHtml(art.style)}</span>
+                <h2 class="text-lg font-bold leading-snug">${escapeHtml(art.title)}</h2>
+                <p class="text-xs text-slate-400 mt-0.5">${escapeHtml(art.titleZh || '')}</p>
+              </div>
+              <button onclick="speak('${escapeHtml((art.paragraphs || []).join(' ')).replace(/'/g, "\\'")}')" class="shrink-0 w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm" title="朗讀全文">🔊</button>
+            </div>
+            <p class="text-[11px] text-slate-400 bg-slate-50 dark:bg-slate-800/60 px-3 py-1.5 rounded-xl">💡 點擊文章入面任何一個英文字即可查解釋並加入單詞簿</p>
+            <div class="space-y-3">${paragraphsHtml}</div>
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button onclick="toggleArticleZh()" class="text-xs font-semibold text-brand-600 dark:text-brand-400">${state.articleShowZh ? '隱藏中文翻譯' : '顯示全文中文翻譯'}</button>
+              ${state.articleShowZh ? `<p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-2">${escapeHtml(art.translationZh || '')}</p>` : ''}
+            </div>
+          </div>
+          ${quizHtml}
+        `;
+      } else {
+        bodyHtml = `
+          <div class="bg-white dark:bg-[#1E293B] rounded-3xl border border-[#E2E8F0] dark:border-slate-800 p-7 text-center space-y-2">
+            <div class="text-3xl">📰</div>
+            <h3 class="font-bold text-sm">將你查過嘅生字變成專屬閱讀文章</h3>
+            <p class="text-xs text-slate-500">揀好目標程度同形式，撳上面「生成今日文章」即可開始。</p>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="space-y-3.5">
+          <div class="space-y-2">
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">${levelChips}</div>
+            <div class="flex gap-2">${styleChips}</div>
+            <div class="flex gap-2">
+              <select id="article-book-select" class="flex-1 px-3 py-2.5 rounded-2xl bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-slate-700 text-xs font-medium focus:outline-none">${bookOpts}</select>
+              <button onclick="generateArticle()" class="px-4 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-sm shrink-0">生成今日文章</button>
+            </div>
+          </div>
+          ${bodyHtml}
+        </div>
+      `;
+    }
+
+    window.setArticlePref = function(key, val) {
+      state.prefs[key] = val;
+      saveJSON(STORAGE_KEYS.PREFS, state.prefs);
+      render();
+    };
+    window.toggleArticleZh = function() { state.articleShowZh = !state.articleShowZh; render(); };
+    window.answerQuiz = function(qi, oi) { state.quizAnswers[qi] = oi; render(); };
+
+    // ==================== SWIPE TO DELETE & EVENT BINDING ====================
+    function attachSwipeHandlers() {
+      document.querySelectorAll('.swipe-wrapper').forEach(wrapper => {
+        const inner = wrapper.querySelector('.swipe-item-inner');
+        let startX = 0, currentX = 0, dragging = false, moved = false;
+
+        inner.addEventListener('touchstart', e => {
+          startX = e.touches[0].clientX;
+          dragging = true;
+          moved = false;
+          inner.style.transition = 'none';
+        }, { passive: true });
+
+        inner.addEventListener('touchmove', e => {
+          if (!dragging) return;
+          const dx = e.touches[0].clientX - startX;
+          if (Math.abs(dx) > 8) moved = true;
+          currentX = Math.max(-84, Math.min(0, dx));
+          inner.style.transform = `translateX(${currentX}px)`;
+        }, { passive: true });
+
+        inner.addEventListener('touchend', () => {
+          if (!dragging) return;
+          dragging = false;
+          inner.style.transition = 'transform 0.2s cubic-bezier(0.22, 1, 0.36, 1)';
+          if (currentX < -42) {
+            inner.style.transform = 'translateX(-80px)';
+          } else {
+            inner.style.transform = 'translateX(0px)';
+          }
+          currentX = 0;
+        });
+
+        inner.addEventListener('click', () => {
+          if (moved) return;
+          if (inner.style.transform === 'translateX(-80px)') {
+            inner.style.transform = 'translateX(0px)';
+            return;
+          }
+          doTranslate(inner.dataset.text);
+        });
+      });
+    }
+
+    function updateNavUI() {
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const active = btn.dataset.tab === state.tab;
+        btn.classList.toggle('text-brand-600', active);
+        btn.classList.toggle('dark:text-brand-500', active);
+        btn.classList.toggle('text-slate-500', !active);
+        btn.classList.toggle('dark:text-slate-400', !active);
+      });
+    }
+
+    function render() {
+      const main = document.getElementById('main-content');
+      if (state.tab === 'translate') main.innerHTML = renderTranslate();
+      else if (state.tab === 'wordbooks') main.innerHTML = renderWordbooks();
+      else if (state.tab === 'review') main.innerHTML = renderReview();
+      else if (state.tab === 'article') main.innerHTML = renderArticle();
+
+      // Bind dynamic listeners
+      const trInput = document.getElementById('translate-input');
+      if (trInput) {
+        trInput.addEventListener('input', e => {
+          state.inputText = e.target.value;
+          const cc = document.getElementById('char-count');
+          if (cc) cc.textContent = `${state.inputText.length}/500`;
+        });
+        trInput.addEventListener('keydown', e => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            doTranslate(trInput.value);
+          }
+        });
+      }
+      document.getElementById('btn-clear-input')?.addEventListener('click', () => {
+        state.inputText = '';
+        render();
+      });
+      document.getElementById('btn-do-translate')?.addEventListener('click', () => doTranslate(state.inputText));
+      document.getElementById('btn-back-translate')?.addEventListener('click', () => {
+        state.translateView = 'input';
+        render();
+      });
+
+      document.getElementById('word-search')?.addEventListener('input', e => {
+        state.searchQuery = e.target.value;
+        render();
+        const el = document.getElementById('word-search');
+        if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+      });
+
+      document.getElementById('review-book-select')?.addEventListener('change', e => {
+        state.reviewBookId = e.target.value;
+        buildReviewQueue();
+        render();
+      });
+
+      const spInput = document.getElementById('spelling-input');
+      if (spInput) {
+        spInput.addEventListener('input', e => { state.spellingInput = e.target.value; });
+        spInput.addEventListener('keydown', e => {
+          if (e.key === 'Enter') { e.preventDefault(); checkSpelling(); }
+        });
+      }
+
+      document.getElementById('article-book-select')?.addEventListener('change', e => {
+        state.prefs.articleBookId = e.target.value;
+        saveJSON(STORAGE_KEYS.PREFS, state.prefs);
+      });
+
+      attachSwipeHandlers();
+    }
+
+    // ==================== GLOBAL HEADER & NAV EVENTS ====================
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.tab = btn.dataset.tab;
+        if (state.tab === 'translate') state.translateView = 'input';
+        if (state.tab === 'review') buildReviewQueue();
+        updateNavUI();
+        render();
+      });
+    });
+
+    document.getElementById('btn-theme').addEventListener('click', () => {
+      state.prefs.dark = !state.prefs.dark;
+      saveJSON(STORAGE_KEYS.PREFS, state.prefs);
+      applyTheme();
+    });
+
+    document.getElementById('btn-accent').addEventListener('click', () => {
+      state.prefs.accent = state.prefs.accent === 'US' ? 'UK' : 'US';
+      saveJSON(STORAGE_KEYS.PREFS, state.prefs);
+      applyTheme();
+      showToast(`已切換為${state.prefs.accent === 'US' ? '美式' : '英式'}發音`);
+      if (state.tab === 'translate' && state.translateView === 'result') render();
+    });
+
+    document.getElementById('btn-pro').addEventListener('click', () => {
+      openModal(`
+        <div class="text-center space-y-3 py-2">
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">Catchy PRO</span>
+          <h3 class="text-xl font-bold">解鎖完整 DSE / IELTS 學習體驗</h3>
+          <p class="text-xs text-slate-500">早鳥測試階段，所有功能現正免費開放試用！</p>
+          <ul class="text-left text-xs space-y-2 bg-slate-50 dark:bg-slate-800/70 p-4 rounded-2xl">
+            <li>✓ 無限自訂單詞簿與生字儲存</li>
+            <li>✓ 每日專屬 DSE / IELTS 程度生字文章</li>
+            <li>✓ 全文章點擊查字 + 互動閱讀理解測驗</li>
+            <li>✓ 逐字對比串字測驗模式</li>
+          </ul>
+          <button onclick="closeModal()" class="w-full py-3 rounded-2xl bg-brand-600 text-white text-sm font-semibold">繼續免費試用</button>
+        </div>
+      `);
+    });
+
+    // Init
+    applyTheme();
+    updateNavUI();
+    render();
+  </script>
+</body>
+</html>
