@@ -14,7 +14,14 @@ export async function onRequestOptions() {
 
 function extractJSON(text) {
   if (!text) throw new Error("Empty AI response");
-  let cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  function extractJSON(text) {
+  if (!text) throw new Error("Empty AI response");
+  if (typeof text === "object") {
+    if (text.response && typeof text.response === "object") return text.response;
+    if (typeof text.response === "string") text = text.response;
+    else return text;
+  }
+  let cleaned = String(text).replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
   const firstBrace = cleaned.indexOf("{");
   const lastBrace = cleaned.lastIndexOf("}");
   if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
@@ -22,7 +29,6 @@ function extractJSON(text) {
   }
   return JSON.parse(cleaned);
 }
-
 export async function onRequestPost(context) {
   const { request, env } = context;
   const corsHeaders = {
