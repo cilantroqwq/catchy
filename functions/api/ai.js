@@ -140,7 +140,7 @@ Use concise Hong Kong Traditional Chinese (繁體中文).`;
       });
     }
 
-    const aiResponse = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+    const aiResponse = await env.AI.run("@cf/meta/llama-3.2-3b-instruct", {
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
